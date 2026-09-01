@@ -57,7 +57,7 @@ def _schema(cur: dict) -> vol.Schema:
 async def _validate(hass, user_input: dict) -> dict[str, str]:
     """Verify the credentials against the CCU before creating the entry."""
     session = async_create_clientsession(
-        hass, verify_ssl=False, cookie_jar=aiohttp.CookieJar(unsafe=True)
+        hass, verify_ssl=False, cookie_jar=aiohttp.DummyCookieJar()
     )
     api = CcuApi(session, user_input[CONF_HOST],
                  user_input[CONF_USERNAME], user_input[CONF_PASSWORD])

@@ -44,11 +44,12 @@ class CtekRuntime:
     @classmethod
     def from_entry(cls, hass: HomeAssistant, entry: ConfigEntry) -> "CtekRuntime":
         data = {**entry.data, **entry.options}
-        # The CCU lives at a bare IP, and aiohttp's default cookie jar silently
-        # drops cookies for IP hosts — the session cookie would be discarded and
-        # every call after login would 401. unsafe=True keeps it.
+        # DummyCookieJar on purpose: aiohttp's real jar re-serialises cookies
+        # through SimpleCookie, which quotes the value (session="abc" instead
+        # of session=abc) and the CCU then rejects every call with 401. The API
+        # client captures the cookie at login and sends it verbatim instead.
         session = async_create_clientsession(
-            hass, verify_ssl=False, cookie_jar=aiohttp.CookieJar(unsafe=True)
+            hass, verify_ssl=False, cookie_jar=aiohttp.DummyCookieJar()
         )
         api = CcuApi(
             session,

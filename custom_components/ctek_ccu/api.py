@@ -45,6 +45,10 @@ class CcuApi:
         self._login_lock = asyncio.Lock()
         self._request_lock = asyncio.Lock()
         self._session_generation = 0
+        # The CCU sets its cookie for a bare IP host, which aiohttp's jar
+        # handles inconsistently — so we capture the value at login and send it
+        # back as an explicit header instead of relying on the jar at all.
+        self._cookie: str | None = None
         # Back off after a failed login. A small embedded controller can run out
         # of session slots or rate-limit, and retrying every poll would keep it
         # pinned there — so failures cool down instead of hammering.
@@ -83,14 +87,38 @@ class CcuApi:
         ) as resp:
             if resp.status != 200:
                 raise CcuAuthError(f"CCU login failed: HTTP {resp.status}")
+            self._cookie = None
+            for raw in resp.headers.getall("Set-Cookie", []):
+                # e.g. "session=abc123; Path=/" -> keep just "session=abc123"
+                self._cookie = raw.split(";", 1)[0].strip()
+                break
+            if not self._cookie:
+                raise CcuAuthError("CCU login returned no session cookie")
 
     async def _request(self, method: str, path: str, json_body=None):
         """Issue one call on an already-open session (see :meth:`session`)."""
         async with self._request_lock:  # one call at a time; the CCU is small
+            headers = {"Cookie": self._cookie} if self._cookie else {}
             async with self._session.request(
-                method, f"{self._base}{path}", json=json_body, ssl=False
+                method, f"{self._base}{path}", json=json_body,
+                headers=headers, ssl=False
             ) as resp:
                 if resp.status == 401:
+                    # Diagnostic: which headers actually went out, and did our
+                    # Cookie survive? Values are never logged, only shapes.
+                    sent = dict(resp.request_info.headers)
+                    cookie_sent = sent.get("Cookie")
+                    _LOGGER.debug(
+                        "CCU 401 on %s | cookie_header=%s len=%s | our_cookie=%s len=%s | "
+                        "other_headers=%s | body=%s",
+                        path,
+                        "yes" if cookie_sent else "NO",
+                        len(cookie_sent) if cookie_sent else 0,
+                        "yes" if self._cookie else "NO",
+                        len(self._cookie) if self._cookie else 0,
+                        sorted(k for k in sent if k != "Cookie"),
+                        (await resp.text())[:120],
+                    )
                     raise CcuAuthError(f"CCU session not accepted for {path}")
                 resp.raise_for_status()
                 if resp.content_type == "application/json":
@@ -99,10 +127,13 @@ class CcuApi:
 
     async def _logout(self) -> None:
         with contextlib.suppress(Exception):
+            headers = {"Cookie": self._cookie} if self._cookie else {}
             async with self._session.post(
-                f"{self._base}/api/status/logout", json={}, ssl=False
+                f"{self._base}/api/status/logout", json={},
+                headers=headers, ssl=False
             ):
                 pass
+        self._cookie = None
 
     @contextlib.asynccontextmanager
     async def session(self):

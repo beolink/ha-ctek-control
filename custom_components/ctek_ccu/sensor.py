@@ -113,6 +113,11 @@ class CtekOutletStateSensor(_CcuSensor):
         outlets = (self.coordinator.data or {}).get("outlets")
         if outlets is None:
             return None
+        # The CCU answers {"outletstates": ["Available", ...], "outletmodes": [...]}
+        if isinstance(outlets, dict):
+            states = outlets.get("outletstates")
+            if isinstance(states, list) and len(states) >= self._connector:
+                return states[self._connector - 1]
         if isinstance(outlets, list) and len(outlets) >= self._connector:
             item = outlets[self._connector - 1]
             if isinstance(item, dict):

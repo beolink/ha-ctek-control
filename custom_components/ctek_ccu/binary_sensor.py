@@ -43,9 +43,11 @@ class CtekBackendConnected(CoordinatorEntity[CcuCoordinator], BinarySensorEntity
             return None
         if isinstance(raw, bool):
             return raw
-        val = dig(raw, "connected", "hasbackendconnection", "value", "status")
+        val = dig(raw, "backendconn", "connected", "hasbackendconnection", "value", "status")
         if isinstance(val, bool):
             return val
+        if isinstance(val, (int, float)):
+            return bool(val)
         if isinstance(val, str):
             return val.strip().lower() in ("true", "1", "connected", "online", "yes")
         return bool(val) if val is not None else None

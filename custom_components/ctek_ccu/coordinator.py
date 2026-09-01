@@ -7,6 +7,7 @@ and its entities go unavailable, rather than breaking the whole update.
 
 from __future__ import annotations
 
+import json
 import logging
 from datetime import timedelta
 
@@ -57,6 +58,12 @@ def dig(data, *names):
 
 def active_limit_a(profiles) -> float | None:
     """Lowest limit across the returned charging profiles (what actually binds)."""
+    if isinstance(profiles, str):
+        # The CCU returns this endpoint as text rather than JSON.
+        try:
+            profiles = json.loads(profiles)
+        except (TypeError, ValueError):
+            return None
     limits: list[float] = []
     stack = [profiles]
     while stack:
