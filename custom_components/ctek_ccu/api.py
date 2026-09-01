@@ -34,7 +34,7 @@ class CcuAuthError(Exception):
 
 class CcuApi:
     def __init__(self, session: aiohttp.ClientSession, host: str,
-                 username: str, password: str) -> None:
+                 username: str, password: str, cookie_store=None) -> None:
         self._session = session
         self._base = f"https://{host}"
         self._username = username
@@ -58,6 +58,27 @@ class CcuApi:
         # pinned there — so failures cool down instead of hammering.
         self._cooldown_until = 0.0
         self._backoff = 60.0
+        # Optional durable store for the session cookie, as
+        # ``(async load() -> str | None, async save(str | None))``. Home
+        # Assistant can be restarted or the integration reloaded while a session
+        # is open — the logout in :meth:`session` then never runs, the CCU keeps
+        # the slot, and every later login is refused (HTTP 404/500) until the
+        # box is power-cycled. Persisting the cookie lets the next run close
+        # that orphan instead.
+        self._cookie_store = cookie_store
+
+    async def _saved_cookie(self) -> str | None:
+        if not self._cookie_store:
+            return None
+        with contextlib.suppress(Exception):
+            return await self._cookie_store[0]()
+        return None
+
+    async def _persist_cookie(self, cookie: str | None) -> None:
+        if not self._cookie_store:
+            return
+        with contextlib.suppress(Exception):
+            await self._cookie_store[1](cookie)
 
     async def _login(self, seen_generation: int | None = None) -> None:
         async with self._login_lock:
@@ -77,11 +98,31 @@ class CcuApi:
         try:
             await self._login_request()
         except Exception:
+            self._cookie = None   # a failed login leaves nothing usable
+            stale = await self._saved_cookie()
+            if stale:
+                # One session slot, and it is still held by a previous run of
+                # this integration. Close it with the cookie we kept, then try
+                # once more before giving up and backing off.
+                _LOGGER.warning(
+                    "CCU refused the login; closing the session left open by a "
+                    "previous run and retrying"
+                )
+                self._cookie = stale
+                await self._logout()
+                with contextlib.suppress(Exception):
+                    await self._login_request()
+            if self._cookie:
+                self._backoff = 60.0
+                self._cooldown_until = 0.0
+                await self._persist_cookie(self._cookie)
+                return
             self._cooldown_until = time.monotonic() + self._backoff
             self._backoff = min(self._backoff * 2, 900.0)
             raise
         self._backoff = 60.0
         self._cooldown_until = 0.0
+        await self._persist_cookie(self._cookie)
 
     async def _login_request(self) -> None:
         async with self._session.post(
@@ -138,6 +179,7 @@ class CcuApi:
             ):
                 pass
         self._cookie = None
+        await self._persist_cookie(None)
 
     @contextlib.asynccontextmanager
     async def session(self):

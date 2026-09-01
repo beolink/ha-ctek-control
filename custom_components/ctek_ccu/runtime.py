@@ -9,6 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 import aiohttp
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.storage import Store
 
 from .api import CcuApi
 from .const import (
@@ -21,6 +22,7 @@ from .const import (
     DEFAULT_CONNECTORS,
     DEFAULT_MAX_CURRENT,
     DEFAULT_PREFIX,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,11 +53,22 @@ class CtekRuntime:
         session = async_create_clientsession(
             hass, verify_ssl=False, cookie_jar=aiohttp.DummyCookieJar()
         )
+        # Keep the session cookie across restarts: the CCU has a single session
+        # slot, and a restart while a session is open would otherwise strand it.
+        store = Store(hass, 1, f"{DOMAIN}.{entry.entry_id}.session")
+
+        async def _load_cookie():
+            return ((await store.async_load()) or {}).get("cookie")
+
+        async def _save_cookie(cookie):
+            await store.async_save({"cookie": cookie})
+
         api = CcuApi(
             session,
             data[CONF_HOST],
             data[CONF_USERNAME],
             data[CONF_PASSWORD],
+            cookie_store=(_load_cookie, _save_cookie),
         )
         max_a = int(data.get(CONF_MAX_CURRENT, DEFAULT_MAX_CURRENT))
         return cls(
