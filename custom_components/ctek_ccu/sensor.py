@@ -154,7 +154,9 @@ class CtekDiagnosticsSensor(_CcuSensor):
 
     _attr_icon = "mdi:code-json"
     _attr_entity_registry_enabled_default = False
-    _unrecorded_attributes = frozenset({"outlets", "nanogrid", "mil", "profiles", "rfid"})
+    _unrecorded_attributes = frozenset(
+        {"outlets", "nanogrid", "mil", "profiles", "rfid", "errors"}
+    )
 
     def __init__(self, coordinator, runtime) -> None:
         super().__init__(coordinator, runtime, "diagnostics")
@@ -166,4 +168,6 @@ class CtekDiagnosticsSensor(_CcuSensor):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        return dict(self.coordinator.data or {})
+        attrs = dict(self.coordinator.data or {})
+        attrs["errors"] = dict(getattr(self.coordinator, "errors", {}) or {})
+        return attrs

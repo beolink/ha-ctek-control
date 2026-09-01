@@ -7,7 +7,8 @@ from dataclasses import dataclass
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import aiohttp
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .api import CcuApi
 from .const import (
@@ -43,8 +44,14 @@ class CtekRuntime:
     @classmethod
     def from_entry(cls, hass: HomeAssistant, entry: ConfigEntry) -> "CtekRuntime":
         data = {**entry.data, **entry.options}
+        # The CCU lives at a bare IP, and aiohttp's default cookie jar silently
+        # drops cookies for IP hosts — the session cookie would be discarded and
+        # every call after login would 401. unsafe=True keeps it.
+        session = async_create_clientsession(
+            hass, verify_ssl=False, cookie_jar=aiohttp.CookieJar(unsafe=True)
+        )
         api = CcuApi(
-            async_get_clientsession(hass),
+            session,
             data[CONF_HOST],
             data[CONF_USERNAME],
             data[CONF_PASSWORD],
@@ -76,7 +83,8 @@ class CtekRuntime:
         if limit == self.last_command:
             return  # don't re-send an unchanged limit
         try:
-            await self.api.async_set_limit(limit, self.connectors)
+            async with self.api.session():
+                await self.api.async_set_limit(limit, self.connectors)
             self.last_command = limit
             self.last_error = None
         except Exception as err:  # noqa: BLE001 - surfaced via the status sensor
@@ -88,7 +96,8 @@ class CtekRuntime:
         if self.last_command is None:
             return
         try:
-            await self.api.async_set_limit(self.max_current_a, self.connectors)
+            async with self.api.session():
+                await self.api.async_set_limit(self.max_current_a, self.connectors)
         except Exception as err:  # noqa: BLE001
             _LOGGER.warning("CTEK CCU release failed: %s", err)
         self.last_command = None

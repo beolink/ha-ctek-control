@@ -7,7 +7,6 @@ and its entities go unavailable, rather than breaking the whole update.
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from datetime import timedelta
 
@@ -19,7 +18,9 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-POLL_SECONDS = 30
+# The CCU's single session is borrowed for each poll, so polling slowly keeps
+# the web UI usable for the owner most of the time.
+POLL_SECONDS = 120
 
 # key -> endpoint. Read-only; nothing here changes charger state.
 ENDPOINTS = {
@@ -77,14 +78,26 @@ class CcuCoordinator(DataUpdateCoordinator[dict]):
         super().__init__(hass, _LOGGER, name=f"{DOMAIN}_{entry_id}",
                          update_interval=timedelta(seconds=POLL_SECONDS))
         self._api = api
+        self.errors: dict[str, str] = {}
 
     async def _async_update_data(self) -> dict:
-        async def one(path):
+        self.errors = {}
+
+        async def one(key, path):
             try:
                 return await self._api._request("GET", path)
             except Exception as err:  # noqa: BLE001 - per-endpoint tolerance
+                # Recorded (never logged with credentials) so the diagnostics
+                # sensor can show why an endpoint is blank.
+                self.errors[key] = f"{type(err).__name__}: {err}"
                 _LOGGER.debug("CCU %s unavailable: %s", path, err)
                 return None
 
-        results = await asyncio.gather(*(one(p) for p in ENDPOINTS.values()))
-        return dict(zip(ENDPOINTS.keys(), results))
+        try:
+            # Borrow the CCU's single session for this cycle only.
+            async with self._api.session():
+                # Sequential on purpose: the CCU is a small embedded server.
+                return {key: await one(key, path) for key, path in ENDPOINTS.items()}
+        except Exception as err:  # noqa: BLE001 - keep the entities alive
+            self.errors["login"] = f"{type(err).__name__}: {err}"
+            return {key: None for key in ENDPOINTS}

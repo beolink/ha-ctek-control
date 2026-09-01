@@ -44,6 +44,18 @@ charging current. Credentials are entered by you and stored by Home Assistant.
 The CCU serves HTTPS with a self-signed certificate; verification is disabled
 for that local host by design.
 
+## One session at a time
+
+The CCU accepts only **one** session. A second login while one is open — the
+owner's own browser included — is answered with HTTP 500, and a session that is
+never closed holds the slot indefinitely. This driver therefore borrows the
+session for each poll and **always logs out again**, so the web UI stays usable
+between polls. Polling is deliberately slow (120 s) for the same reason, and a
+failed login backs off instead of retrying every cycle.
+
+If the charger starts answering 500 to every login, a session is stuck open:
+log out of the web UI, or power-cycle the CCU to clear it.
+
 ## Safety
 
 - The control gate defaults **off**.

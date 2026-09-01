@@ -1,14 +1,25 @@
 """Minimal async client for the CTEK CCU local REST API.
 
-Auth is a session cookie obtained from ``POST /api/status/login`` with a JSON
-``{"username": ..., "password": ...}`` body; every other call rides that cookie
-and we transparently re-login on a 401. The CCU serves HTTPS with a self-signed
-certificate, so verification is disabled for this local host by design.
+Auth is a session cookie from ``POST /api/status/login`` with a JSON
+``{"username": ..., "password": ...}`` body.
+
+**The CCU allows only one session at a time.** A second login while a session is
+open — including the installer's own browser session — is answered with HTTP
+500, and a session that is never closed keeps the slot indefinitely (it does not
+appear to time out quickly). So this client borrows the slot for as short a time
+as possible: :meth:`session` logs in, runs the work and always logs out again,
+leaving the web UI usable between polls.
+
+The CCU serves HTTPS with a self-signed certificate, so verification is disabled
+for this local host by design.
 """
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import logging
+import time
 
 import aiohttp
 
@@ -28,8 +39,43 @@ class CcuApi:
         self._base = f"https://{host}"
         self._username = username
         self._password = password
+        # The CCU is a small embedded server: concurrent logins make it answer
+        # HTTP 500, so both the login and the requests themselves are
+        # serialised, and a login is only redone once per burst of 401s.
+        self._login_lock = asyncio.Lock()
+        self._request_lock = asyncio.Lock()
+        self._session_generation = 0
+        # Back off after a failed login. A small embedded controller can run out
+        # of session slots or rate-limit, and retrying every poll would keep it
+        # pinned there — so failures cool down instead of hammering.
+        self._cooldown_until = 0.0
+        self._backoff = 60.0
 
-    async def _login(self) -> None:
+    async def _login(self, seen_generation: int | None = None) -> None:
+        async with self._login_lock:
+            # Another coroutine may have refreshed the session while we waited.
+            if seen_generation is not None and seen_generation != self._session_generation:
+                return
+            await self._login_locked()
+            self._session_generation += 1
+
+    async def _login_locked(self) -> None:
+        now = time.monotonic()
+        if now < self._cooldown_until:
+            raise CcuAuthError(
+                f"login backing off for {int(self._cooldown_until - now)}s "
+                "after a previous failure"
+            )
+        try:
+            await self._login_request()
+        except Exception:
+            self._cooldown_until = time.monotonic() + self._backoff
+            self._backoff = min(self._backoff * 2, 900.0)
+            raise
+        self._backoff = 60.0
+        self._cooldown_until = 0.0
+
+    async def _login_request(self) -> None:
         async with self._session.post(
             f"{self._base}/api/status/login",
             json={"username": self._username, "password": self._password},
@@ -38,19 +84,38 @@ class CcuApi:
             if resp.status != 200:
                 raise CcuAuthError(f"CCU login failed: HTTP {resp.status}")
 
-    async def _request(self, method: str, path: str, json_body=None, _retry: bool = True):
-        async with self._session.request(
-            method, f"{self._base}{path}", json=json_body, ssl=False
-        ) as resp:
-            if resp.status == 401 and _retry:
-                await self._login()
-                return await self._request(method, path, json_body, _retry=False)
-            if resp.status == 401:
-                raise CcuAuthError("CCU rejected the session after re-login")
-            resp.raise_for_status()
-            if resp.content_type == "application/json":
-                return await resp.json()
-            return await resp.text()
+    async def _request(self, method: str, path: str, json_body=None):
+        """Issue one call on an already-open session (see :meth:`session`)."""
+        async with self._request_lock:  # one call at a time; the CCU is small
+            async with self._session.request(
+                method, f"{self._base}{path}", json=json_body, ssl=False
+            ) as resp:
+                if resp.status == 401:
+                    raise CcuAuthError(f"CCU session not accepted for {path}")
+                resp.raise_for_status()
+                if resp.content_type == "application/json":
+                    return await resp.json()
+                return await resp.text()
+
+    async def _logout(self) -> None:
+        with contextlib.suppress(Exception):
+            async with self._session.post(
+                f"{self._base}/api/status/logout", json={}, ssl=False
+            ):
+                pass
+
+    @contextlib.asynccontextmanager
+    async def session(self):
+        """Hold the CCU's single session for the duration of the block only.
+
+        Always logs out afterwards — leaving it open would lock everyone else,
+        including the owner's browser, out of the charger.
+        """
+        await self._login()
+        try:
+            yield self
+        finally:
+            await self._logout()
 
     async def async_login(self) -> None:
         await self._login()

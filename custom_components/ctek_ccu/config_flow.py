@@ -6,7 +6,8 @@ from typing import Any
 
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import aiohttp
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -55,7 +56,10 @@ def _schema(cur: dict) -> vol.Schema:
 
 async def _validate(hass, user_input: dict) -> dict[str, str]:
     """Verify the credentials against the CCU before creating the entry."""
-    api = CcuApi(async_get_clientsession(hass), user_input[CONF_HOST],
+    session = async_create_clientsession(
+        hass, verify_ssl=False, cookie_jar=aiohttp.CookieJar(unsafe=True)
+    )
+    api = CcuApi(session, user_input[CONF_HOST],
                  user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
     try:
         await api.async_login()
