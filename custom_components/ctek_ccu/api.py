@@ -44,6 +44,10 @@ class CcuApi:
         # serialised, and a login is only redone once per burst of 401s.
         self._login_lock = asyncio.Lock()
         self._request_lock = asyncio.Lock()
+        # The CCU has exactly one session, so a poll and a write must never
+        # overlap: the one that finishes first logs out and clears the cookie,
+        # leaving the other unauthenticated mid-flight.
+        self._session_lock = asyncio.Lock()
         self._session_generation = 0
         # The CCU sets its cookie for a bare IP host, which aiohttp's jar
         # handles inconsistently — so we capture the value at login and send it
@@ -139,14 +143,17 @@ class CcuApi:
     async def session(self):
         """Hold the CCU's single session for the duration of the block only.
 
-        Always logs out afterwards — leaving it open would lock everyone else,
-        including the owner's browser, out of the charger.
+        Serialised: only one session context runs at a time, so a poll can't
+        log out from under a concurrent write. Always logs out afterwards —
+        leaving it open would lock everyone else, including the owner's
+        browser, out of the charger.
         """
-        await self._login()
-        try:
-            yield self
-        finally:
-            await self._logout()
+        async with self._session_lock:
+            await self._login()
+            try:
+                yield self
+            finally:
+                await self._logout()
 
     async def async_login(self) -> None:
         await self._login()
