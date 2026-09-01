@@ -59,6 +59,26 @@
     "sensor": {
       "control_status": {
         "name": "Styrningsstatus"
+      },
+      "active_limit": {
+        "name": "Aktiv laddgräns"
+      },
+      "outlet_state": {
+        "name": "Uttag {connector} status"
+      },
+      "firmware": {
+        "name": "Firmwareversion"
+      },
+      "serial": {
+        "name": "Serienummer"
+      },
+      "diagnostics": {
+        "name": "CCU-diagnostik"
+      }
+    },
+    "binary_sensor": {
+      "backend_connected": {
+        "name": "OCPP-backend ansluten"
       }
     }
   }

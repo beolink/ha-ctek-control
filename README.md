@@ -25,6 +25,15 @@ load balancing; EMS just decides *when* charging is permitted.
 | `switch.<prefix>_charging_allowed` | Bind as EMS's EV charger entity: on = charging permitted (limit = current), off = blocked (0 A) |
 | `number.<prefix>_charging_current` | Bind as EMS's EV current entity; capped by the configured maximum |
 | `sensor.<prefix>_control_status` | Last limit sent, plus diagnostics |
+| `sensor.<prefix>_active_limit` | The limit actually binding the charger — including whatever the upstream central system applies |
+| `sensor.<prefix>_outlet_N_state` | Per-connector state read from the charger |
+| `binary_sensor.<prefix>_backend_connected` | Whether the charger's OCPP backend link is up |
+| `sensor.<prefix>_firmware`, `_serial`, `_diagnostics` | Device info and raw endpoint payloads (disabled by default) |
+
+Values are polled from the CCU's read-only endpoints every 30 seconds. Response
+shapes vary between firmware revisions, so the sensors match on key *name*
+rather than a fixed path, and the diagnostics sensor exposes the raw payloads so
+the typed sensors can be tightened against a real installation.
 
 ## Setup
 

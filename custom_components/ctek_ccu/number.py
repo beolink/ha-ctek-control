@@ -15,7 +15,8 @@ from .runtime import CtekRuntime
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry,
                             async_add_entities: AddEntitiesCallback) -> None:
-    rt: CtekRuntime = hass.data[DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id]
+    rt: CtekRuntime = data["runtime"]
     async_add_entities([CtekChargingCurrentNumber(rt)])
 
 

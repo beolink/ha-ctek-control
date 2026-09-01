@@ -59,6 +59,26 @@
     "sensor": {
       "control_status": {
         "name": "Control status"
+      },
+      "active_limit": {
+        "name": "Active charging limit"
+      },
+      "outlet_state": {
+        "name": "Outlet {connector} state"
+      },
+      "firmware": {
+        "name": "Firmware version"
+      },
+      "serial": {
+        "name": "Serial number"
+      },
+      "diagnostics": {
+        "name": "CCU diagnostics"
+      }
+    },
+    "binary_sensor": {
+      "backend_connected": {
+        "name": "OCPP backend connected"
       }
     }
   }
