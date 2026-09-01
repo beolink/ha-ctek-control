@@ -88,13 +88,18 @@ class CtekRuntime:
             return 0
         return max(0, min(int(self.current_a), self.max_current_a))
 
-    async def async_apply(self) -> None:
-        """Push the current decision to the charger — the single choke point."""
+    async def async_apply(self, force: bool = False) -> None:
+        """Push the current decision to the charger — the single choke point.
+
+        ``force`` re-sends even an unchanged limit: after a failed write the
+        charger is not known to be on the limit we last asked for, so the
+        dedup would otherwise keep us from ever correcting it.
+        """
         if not self.control_enabled:
             _LOGGER.debug("CTEK control disabled — command suppressed")
             return
         limit = self._target_limit()
-        if limit == self.last_command:
+        if limit == self.last_command and not force:
             return  # don't re-send an unchanged limit
         try:
             async with self.api.session():

@@ -30,7 +30,7 @@ PLATFORMS: list[Platform] = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     runtime = CtekRuntime.from_entry(hass, entry)
-    coordinator = CcuCoordinator(hass, runtime.api, entry.entry_id)
+    coordinator = CcuCoordinator(hass, runtime.api, entry.entry_id, runtime)
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "runtime": runtime,

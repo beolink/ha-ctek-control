@@ -3,12 +3,21 @@
 Auth is a session cookie from ``POST /api/status/login`` with a JSON
 ``{"username": ..., "password": ...}`` body.
 
-**The CCU allows only one session at a time.** A second login while a session is
-open — including the installer's own browser session — is answered with HTTP
-500, and a session that is never closed keeps the slot indefinitely (it does not
-appear to time out quickly). So this client borrows the slot for as short a time
-as possible: :meth:`session` logs in, runs the work and always logs out again,
-leaving the web UI usable between polls.
+Concurrent sessions are allowed: two logins held at once were both accepted and
+both usable (verified 2026-09-01), so an open session does not lock anyone out.
+The client still logs out after each burst of work, both to keep the CCU tidy
+and because it has a small connection budget.
+
+What the CCU *does* do is answer **HTTP 404 for a request shape it does not
+recognise** — ``GET /api/status/logout`` returns 404 where ``POST`` returns 200,
+and the login endpoint intermittently answers 404 under load (typically in the
+first seconds after a Home Assistant restart, when the poll and the first write
+arrive together). A 404 is therefore treated as transient and retried briefly
+before the client backs off.
+
+``POST /api/status/logout`` must be sent **without a JSON body**: with ``{}`` the
+CCU processes the logout but resets the connection, which surfaces as a spurious
+ConnectionResetError.
 
 The CCU serves HTTPS with a self-signed certificate, so verification is disabled
 for this local host by design.
@@ -39,9 +48,9 @@ class CcuApi:
         self._base = f"https://{host}"
         self._username = username
         self._password = password
-        # The CCU is a small embedded server: concurrent logins make it answer
-        # HTTP 500, so both the login and the requests themselves are
-        # serialised, and a login is only redone once per burst of 401s.
+        # The CCU is a small embedded server, so logins and the requests
+        # themselves are serialised, and a login is only redone once per burst
+        # of 401s.
         self._login_lock = asyncio.Lock()
         self._request_lock = asyncio.Lock()
         # The CCU has exactly one session, so a poll and a write must never
@@ -57,7 +66,7 @@ class CcuApi:
         # of session slots or rate-limit, and retrying every poll would keep it
         # pinned there — so failures cool down instead of hammering.
         self._cooldown_until = 0.0
-        self._backoff = 60.0
+        self._backoff = 30.0
         # Optional durable store for the session cookie, as
         # ``(async load() -> str | None, async save(str | None))``. Home
         # Assistant can be restarted or the integration reloaded while a session
@@ -96,7 +105,7 @@ class CcuApi:
                 "after a previous failure"
             )
         try:
-            await self._login_request()
+            await self._login_with_retries()
         except Exception:
             self._cookie = None   # a failed login leaves nothing usable
             stale = await self._saved_cookie()
@@ -113,16 +122,32 @@ class CcuApi:
                 with contextlib.suppress(Exception):
                     await self._login_request()
             if self._cookie:
-                self._backoff = 60.0
+                self._backoff = 30.0
                 self._cooldown_until = 0.0
                 await self._persist_cookie(self._cookie)
                 return
             self._cooldown_until = time.monotonic() + self._backoff
             self._backoff = min(self._backoff * 2, 900.0)
             raise
-        self._backoff = 60.0
+        self._backoff = 30.0
         self._cooldown_until = 0.0
         await self._persist_cookie(self._cookie)
+
+    async def _login_with_retries(self, attempts: int = 3) -> None:
+        """Log in, treating the CCU's transient 404s as worth another try.
+
+        The box answers 404 for requests it cannot place, including a login
+        that arrives while it is busy. Those clear within seconds, so a couple
+        of short retries beat dropping into a minutes-long backoff.
+        """
+        for attempt in range(attempts):
+            try:
+                await self._login_request()
+                return
+            except Exception:
+                if attempt == attempts - 1:
+                    raise
+                await asyncio.sleep(1.5 * (attempt + 1))
 
     async def _login_request(self) -> None:
         async with self._session.post(
@@ -174,7 +199,7 @@ class CcuApi:
         with contextlib.suppress(Exception):
             headers = {"Cookie": self._cookie} if self._cookie else {}
             async with self._session.post(
-                f"{self._base}/api/status/logout", json={},
+                f"{self._base}/api/status/logout",
                 headers=headers, ssl=False
             ):
                 pass

@@ -100,10 +100,14 @@ def active_limit_a(profiles) -> float | None:
 
 
 class CcuCoordinator(DataUpdateCoordinator[dict]):
-    def __init__(self, hass: HomeAssistant, api: CcuApi, entry_id: str) -> None:
+    def __init__(self, hass: HomeAssistant, api: CcuApi, entry_id: str,
+                 runtime=None) -> None:
         super().__init__(hass, _LOGGER, name=f"{DOMAIN}_{entry_id}",
                          update_interval=timedelta(seconds=POLL_SECONDS))
         self._api = api
+        # Set so a recovered poll can retry a write that failed while the CCU
+        # was unreachable (see :meth:`_async_update_data`).
+        self._runtime = runtime
         self.errors: dict[str, str] = {}
 
     async def _async_update_data(self) -> dict:
@@ -123,7 +127,19 @@ class CcuCoordinator(DataUpdateCoordinator[dict]):
             # Borrow the CCU's single session for this cycle only.
             async with self._api.session():
                 # Sequential on purpose: the CCU is a small embedded server.
-                return {key: await one(key, path) for key, path in ENDPOINTS.items()}
+                data = {key: await one(key, path) for key, path in ENDPOINTS.items()}
         except Exception as err:  # noqa: BLE001 - keep the entities alive
             self.errors["login"] = f"{type(err).__name__}: {err}"
             return {key: None for key in ENDPOINTS}
+
+        # The CCU is reachable again. A write that failed earlier (typically a
+        # login refused while an orphaned session still held the slot) would
+        # otherwise stay failed until something happened to change the desired
+        # limit — leaving the charger on a stale limit and the status sensor
+        # stuck on "error". Re-apply now, outside the session block so the
+        # single-session lock is free.
+        rt = self._runtime
+        if rt is not None and rt.last_error:
+            _LOGGER.debug("CCU reachable again; re-applying the pending limit")
+            await rt.async_apply(force=True)
+        return data
