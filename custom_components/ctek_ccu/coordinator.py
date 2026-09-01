@@ -33,6 +33,7 @@ ENDPOINTS = {
     "nanogrid": "/api/nanogrid/status",
     "mil": "/api/nanogrid/mil/status",
     "profiles": "/api/config/getChargingProfiles",
+    "meters": "/api/status/getmodbusinfo",
 }
 
 
@@ -54,6 +55,24 @@ def dig(data, *names):
         elif isinstance(cur, list):
             stack.extend(cur)
     return None
+
+
+def charging_power_w(meters) -> float | None:
+    """Live charging power from the CCU's own Modbus meter.
+
+    Measured at the charger, so it is both local and immediate — unlike the
+    car's cloud-reported figure, which lags by minutes.
+    """
+    if not isinstance(meters, dict):
+        return None
+    total = None
+    for m in meters.get("modbusmeters") or []:
+        try:
+            p = float(m.get("power"))
+        except (TypeError, ValueError):
+            continue
+        total = p if total is None else total + p
+    return total
 
 
 def active_limit_a(profiles) -> float | None:

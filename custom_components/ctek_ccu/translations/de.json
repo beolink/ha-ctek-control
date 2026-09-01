@@ -74,6 +74,9 @@
       },
       "diagnostics": {
         "name": "CCU-Diagnose"
+      },
+      "charging_power": {
+        "name": "Ladeleistung"
       }
     },
     "binary_sensor": {

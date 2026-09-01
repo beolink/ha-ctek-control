@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -12,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import CcuCoordinator, active_limit_a, dig
+from .coordinator import CcuCoordinator, active_limit_a, charging_power_w, dig
 from .device import ccu_device_info
 from .runtime import CtekRuntime
 
@@ -25,6 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry,
     async_add_entities([
         CtekStatusSensor(rt),
         CtekActiveLimitSensor(coordinator, rt),
+        CtekChargingPowerSensor(coordinator, rt),
         CtekFirmwareSensor(coordinator, rt),
         CtekSerialSensor(coordinator, rt),
         CtekDiagnosticsSensor(coordinator, rt),
@@ -96,6 +101,22 @@ class CtekActiveLimitSensor(_CcuSensor):
     @property
     def native_value(self):
         return active_limit_a((self.coordinator.data or {}).get("profiles"))
+
+
+class CtekChargingPowerSensor(_CcuSensor):
+    """Charging power measured by the CCU's own meter (local, real-time)."""
+
+    _attr_native_unit_of_measurement = "W"
+    _attr_device_class = SensorDeviceClass.POWER
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_icon = "mdi:ev-station"
+
+    def __init__(self, coordinator, runtime) -> None:
+        super().__init__(coordinator, runtime, "charging_power")
+
+    @property
+    def native_value(self):
+        return charging_power_w((self.coordinator.data or {}).get("meters"))
 
 
 class CtekOutletStateSensor(_CcuSensor):

@@ -74,6 +74,9 @@
       },
       "diagnostics": {
         "name": "CCU-diagnostik"
+      },
+      "charging_power": {
+        "name": "Laddeffekt"
       }
     },
     "binary_sensor": {

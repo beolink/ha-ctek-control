@@ -74,6 +74,9 @@
       },
       "diagnostics": {
         "name": "CCU diagnostics"
+      },
+      "charging_power": {
+        "name": "Charging power"
       }
     },
     "binary_sensor": {
