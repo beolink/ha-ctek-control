@@ -1,0 +1,65 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "CTEK CCU",
+        "description": "Local address, login and limits for the charge control unit.",
+        "data": {
+          "host": "Host / IP",
+          "username": "Username",
+          "password": "Password",
+          "prefix": "Entity prefix",
+          "connectors": "Connectors",
+          "max_current_a": "Maximum charging current"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid username or password",
+      "cannot_connect": "Cannot reach the CCU"
+    },
+    "abort": {
+      "already_configured": "This CCU is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "CTEK CCU",
+        "description": "Local address, login and limits for the charge control unit.",
+        "data": {
+          "host": "Host / IP",
+          "username": "Username",
+          "password": "Password",
+          "prefix": "Entity prefix",
+          "connectors": "Connectors",
+          "max_current_a": "Maximum charging current"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid username or password",
+      "cannot_connect": "Cannot reach the CCU"
+    }
+  },
+  "entity": {
+    "switch": {
+      "control_enabled": {
+        "name": "Control enabled"
+      },
+      "charging_allowed": {
+        "name": "Charging allowed"
+      }
+    },
+    "number": {
+      "charging_current": {
+        "name": "Charging current"
+      }
+    },
+    "sensor": {
+      "control_status": {
+        "name": "Control status"
+      }
+    }
+  }
+}

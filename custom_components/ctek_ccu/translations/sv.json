@@ -1,0 +1,65 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "CTEK CCU",
+        "description": "Lokal adress, inloggning och gränser för laddarens styrenhet.",
+        "data": {
+          "host": "Adress / IP",
+          "username": "Användarnamn",
+          "password": "Lösenord",
+          "prefix": "Entitetsprefix",
+          "connectors": "Antal uttag",
+          "max_current_a": "Max laddström"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Fel användarnamn eller lösenord",
+      "cannot_connect": "Kan inte nå CCU:n"
+    },
+    "abort": {
+      "already_configured": "This CCU is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "CTEK CCU",
+        "description": "Lokal adress, inloggning och gränser för laddarens styrenhet.",
+        "data": {
+          "host": "Adress / IP",
+          "username": "Användarnamn",
+          "password": "Lösenord",
+          "prefix": "Entitetsprefix",
+          "connectors": "Antal uttag",
+          "max_current_a": "Max laddström"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Fel användarnamn eller lösenord",
+      "cannot_connect": "Kan inte nå CCU:n"
+    }
+  },
+  "entity": {
+    "switch": {
+      "control_enabled": {
+        "name": "Styrning aktiverad"
+      },
+      "charging_allowed": {
+        "name": "Laddning tillåten"
+      }
+    },
+    "number": {
+      "charging_current": {
+        "name": "Laddström"
+      }
+    },
+    "sensor": {
+      "control_status": {
+        "name": "Styrningsstatus"
+      }
+    }
+  }
+}

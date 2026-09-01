@@ -1,0 +1,65 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "CTEK CCU",
+        "description": "Lokale Adresse, Anmeldung und Grenzwerte der Ladesteuerung.",
+        "data": {
+          "host": "Adresse / IP",
+          "username": "Benutzername",
+          "password": "Passwort",
+          "prefix": "Entitäts-Präfix",
+          "connectors": "Ladepunkte",
+          "max_current_a": "Maximaler Ladestrom"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Ungültiger Benutzername oder Passwort",
+      "cannot_connect": "CCU nicht erreichbar"
+    },
+    "abort": {
+      "already_configured": "This CCU is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "CTEK CCU",
+        "description": "Lokale Adresse, Anmeldung und Grenzwerte der Ladesteuerung.",
+        "data": {
+          "host": "Adresse / IP",
+          "username": "Benutzername",
+          "password": "Passwort",
+          "prefix": "Entitäts-Präfix",
+          "connectors": "Ladepunkte",
+          "max_current_a": "Maximaler Ladestrom"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Ungültiger Benutzername oder Passwort",
+      "cannot_connect": "CCU nicht erreichbar"
+    }
+  },
+  "entity": {
+    "switch": {
+      "control_enabled": {
+        "name": "Steuerung aktiviert"
+      },
+      "charging_allowed": {
+        "name": "Laden erlaubt"
+      }
+    },
+    "number": {
+      "charging_current": {
+        "name": "Ladestrom"
+      }
+    },
+    "sensor": {
+      "control_status": {
+        "name": "Steuerungsstatus"
+      }
+    }
+  }
+}
