@@ -15,10 +15,13 @@ from __future__ import annotations
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.loader import async_get_integration
 
 from .const import DOMAIN
-from .coordinator import CcuCoordinator
+from .coordinator import CcuCoordinator, dig
 from .runtime import CtekRuntime
+from .stats import async_setup_stats
+from .stats_extra import build_extra
 
 PLATFORMS: list[Platform] = [
     Platform.SWITCH,
@@ -38,6 +41,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_reload))
+
+    # Anonymous daily report. Reads what the coordinator already fetched and
+    # never opens a session of its own: the CCU has a single session slot.
+    # What goes in it: stats_extra.py, and why:
+    # https://stats.rnet.se/integritet
+    integration = await async_get_integration(hass, DOMAIN)
+
+    def _stats_extra() -> dict:
+        data = coordinator.data or {}
+        return build_extra(
+            connectors=runtime.connectors,
+            max_current_a=runtime.max_current_a,
+            control_enabled=runtime.control_enabled,
+            charging_allowed=runtime.charging_allowed,
+            backend_connected=dig(data.get("backend"), "backendconn", "connected",
+                                  "hasbackendconnection", "value", "status"),
+            nanogrid=dig(data.get("nanogrid"), "enabled", "active", "status", "value"),
+            rfid=dig(data.get("rfid"), "enabled", "active", "status", "value"),
+            had_error=runtime.last_error is not None,
+        )
+
+    reporter = await async_setup_stats(
+        hass, entry, DOMAIN, str(integration.version), extra=_stats_extra
+    )
+    entry.async_on_unload(reporter.async_stop)
     return True
 
 

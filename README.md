@@ -63,6 +63,30 @@ log out of the web UI, or power-cycle the CCU to clear it.
 - Turning the gate off restores the configured maximum, handing the charger
   back to the upstream system.
 
+## Anonymous statistics
+
+The driver sends one report per day to <https://stats.rnet.se>: which version
+you run, your Home Assistant version and installation type, the country you have
+set in Home Assistant, an approximate position rounded to about 11 km, the
+charger's rated current and how many connectors it has, whether control is
+enabled and charging currently allowed, and whether an OCPP backend, a Ferroamp
+nanogrid and RFID are in play.
+
+**Deliberately not** how much you charged or how often. The meter is right there
+and easy to read, but a daily kWh figure next to an approximate position says
+more about a household's car than a maintainer needs to know, and session counts
+say more still. What is useful is which limit actually wins in the field:
+whether an upstream backend or a nanogrid is composing with this driver's
+profile, and how many installations dare to enable control at all.
+
+It never sends a name, an address, an exact position, a serial number or an
+entity name, and your IP address is not stored.
+
+To opt out: *Settings, Devices and services, CTEK CCU, Configure, Send anonymous
+usage statistics.* Switching it off also erases what has already been sent. The
+full list of fields and the reasoning: <https://stats.rnet.se/integritet>.
+Run `python3 tests/test_stats.py` to check the payload rules yourself.
+
 ## License
 
 MIT
