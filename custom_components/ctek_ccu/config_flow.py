@@ -30,7 +30,16 @@ from .const import (
     DEFAULT_PREFIX,
     DOMAIN,
 )
-from .stats import OPTION_KEY as CONF_SEND_STATISTICS, async_forget_install
+from .const import CONF_SEND_STATISTICS
+
+
+# hassfest rejects URLs in strings.json, so the addresses travel as
+# placeholders instead.
+STATS_PLACEHOLDERS = {
+    "endpoint": "stats.rnet.se",
+    "endpoint_url": "https://stats.rnet.se",
+    "privacy_url": "https://stats.rnet.se/integritet",
+}
 
 
 def _num(lo: int, hi: int, unit: str) -> NumberSelector:
@@ -87,6 +96,7 @@ class CtekCcuConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title="CTEK CCU", data=user_input)
         return self.async_show_form(step_id="user", data_schema=_schema(user_input or {}),
+                                    description_placeholders=STATS_PLACEHOLDERS,
                                     errors=errors)
 
     @staticmethod
@@ -109,7 +119,12 @@ class CtekCcuOptionsFlow(config_entries.OptionsFlow):
                 if cur.get(CONF_SEND_STATISTICS, True) and not user_input.get(
                         CONF_SEND_STATISTICS, True):
                     # Switching it off erases what has already been sent,
-                    # rather than merely going quiet.
+                    # rather than merely going quiet. Imported here rather than
+                    # at the top: stats.py pulls in Home Assistant, and this
+                    # module is imported by tests that run without it.
+                    from .stats import async_forget_install
+
                     await async_forget_install(self.hass, self._entry, DOMAIN)
                 return self.async_create_entry(title="", data=user_input)
-        return self.async_show_form(step_id="init", data_schema=_schema(cur), errors=errors)
+        return self.async_show_form(step_id="init", data_schema=_schema(cur), errors=errors,
+                                    description_placeholders=STATS_PLACEHOLDERS)

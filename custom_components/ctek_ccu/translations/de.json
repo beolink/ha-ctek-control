@@ -10,7 +10,11 @@
           "password": "Passwort",
           "prefix": "Entitäts-Präfix",
           "connectors": "Ladepunkte",
-          "max_current_a": "Maximaler Ladestrom"
+          "max_current_a": "Maximaler Ladestrom",
+          "send_statistics": "Anonyme Nutzungsstatistik senden"
+        },
+        "data_description": {
+          "send_statistics": "Ein Bericht pro Tag an {endpoint}: Treiberversion, Home-Assistant-Version und Installationsart, das eingestellte Land, eine ungefähre Position auf etwa 11 km gerundet, Nennstrom und Anzahl der Ladepunkte, ob die Steuerung aktiv und das Laden gerade erlaubt ist, sowie ob OCPP-Backend, Ferroamp-Nanogrid und RFID im Spiel sind. Bewusst nicht, wie viel oder wie oft geladen wurde. Nie Name, Adresse, genaue Position, Seriennummer oder Entitätsname, und die IP-Adresse wird nicht gespeichert. Beim Ausschalten wird auch das bereits Gesendete gelöscht. Die vollständige Liste: {privacy_url}"
         }
       }
     },
@@ -37,7 +41,7 @@
           "send_statistics": "Anonyme Nutzungsstatistik senden"
         },
         "data_description": {
-          "send_statistics": "Ein Bericht pro Tag an stats.rnet.se: Treiberversion, Home-Assistant-Version und Installationsart, das eingestellte Land, eine ungefähre Position auf etwa 11 km gerundet, Nennstrom und Anzahl der Ladepunkte, ob die Steuerung aktiv und das Laden gerade erlaubt ist, sowie ob OCPP-Backend, Ferroamp-Nanogrid und RFID im Spiel sind. Bewusst nicht, wie viel oder wie oft geladen wurde. Nie Name, Adresse, genaue Position, Seriennummer oder Entitätsname, und die IP-Adresse wird nicht gespeichert. Beim Ausschalten wird auch das bereits Gesendete gelöscht. Die vollständige Liste: https://stats.rnet.se/integritet"
+          "send_statistics": "Ein Bericht pro Tag an {endpoint}: Treiberversion, Home-Assistant-Version und Installationsart, das eingestellte Land, eine ungefähre Position auf etwa 11 km gerundet, Nennstrom und Anzahl der Ladepunkte, ob die Steuerung aktiv und das Laden gerade erlaubt ist, sowie ob OCPP-Backend, Ferroamp-Nanogrid und RFID im Spiel sind. Bewusst nicht, wie viel oder wie oft geladen wurde. Nie Name, Adresse, genaue Position, Seriennummer oder Entitätsname, und die IP-Adresse wird nicht gespeichert. Beim Ausschalten wird auch das bereits Gesendete gelöscht. Die vollständige Liste: {privacy_url}"
         }
       }
     },

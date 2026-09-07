@@ -21,3 +21,7 @@ DEFAULT_MAX_CURRENT = 16
 PROFILE_PURPOSE = "TxDefaultProfile"
 PROFILE_KIND = "Relative"
 RATE_UNIT = "A"
+
+# Must match OPTION_KEY in stats.py. Kept here so config_flow can build its
+# schema without importing stats.py, which pulls in Home Assistant.
+CONF_SEND_STATISTICS = "send_statistics"

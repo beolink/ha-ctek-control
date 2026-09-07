@@ -10,7 +10,11 @@
           "password": "Password",
           "prefix": "Entity prefix",
           "connectors": "Connectors",
-          "max_current_a": "Maximum charging current"
+          "max_current_a": "Maximum charging current",
+          "send_statistics": "Send anonymous usage statistics"
+        },
+        "data_description": {
+          "send_statistics": "One report per day to {endpoint}: driver version, Home Assistant version and installation type, the country you configured in Home Assistant, an approximate position rounded to about 11 km, the charger's rated current and number of connectors, whether control is enabled and charging currently allowed, and whether an OCPP backend, a Ferroamp nanogrid and RFID are in play. Deliberately not how much you charged or how often. Never a name, an address, an exact position, a serial number or an entity name, and your IP address is not stored. Switching this off also erases what has already been sent. The full list: {privacy_url}"
         }
       }
     },
@@ -37,7 +41,7 @@
           "send_statistics": "Send anonymous usage statistics"
         },
         "data_description": {
-          "send_statistics": "One report per day to stats.rnet.se: driver version, Home Assistant version and installation type, the country you configured in Home Assistant, an approximate position rounded to about 11 km, the charger's rated current and number of connectors, whether control is enabled and charging currently allowed, and whether an OCPP backend, a Ferroamp nanogrid and RFID are in play. Deliberately not how much you charged or how often. Never a name, an address, an exact position, a serial number or an entity name, and your IP address is not stored. Switching this off also erases what has already been sent. The full list: https://stats.rnet.se/integritet"
+          "send_statistics": "One report per day to {endpoint}: driver version, Home Assistant version and installation type, the country you configured in Home Assistant, an approximate position rounded to about 11 km, the charger's rated current and number of connectors, whether control is enabled and charging currently allowed, and whether an OCPP backend, a Ferroamp nanogrid and RFID are in play. Deliberately not how much you charged or how often. Never a name, an address, an exact position, a serial number or an entity name, and your IP address is not stored. Switching this off also erases what has already been sent. The full list: {privacy_url}"
         }
       }
     },
