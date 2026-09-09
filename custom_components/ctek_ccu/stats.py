@@ -101,11 +101,15 @@ class StatsReporter:
         version: str,
         extra: Callable[[], dict[str, Any]] | None = None,
         endpoint: str = ENDPOINT,
+        name: str | None = None,
     ) -> None:
         self.hass = hass
         self.entry = entry
         self.domain = domain
         self.version = version
+        # What a person sees in the log line. The wire payload is keyed on the
+        # domain, which never changes; the display name may.
+        self.name = name or domain
         self.extra = extra
         self.endpoint = endpoint
         self._store: Store = Store(hass, 1, f"{domain}.stats")
@@ -209,7 +213,7 @@ class StatsReporter:
                     "Settings, Devices and services, %s, Configure.",
                     self.endpoint,
                     payload,
-                    self.domain,
+                    self.name,
                 )
             session = async_get_clientsession(self.hass)
             async with asyncio.timeout(TIMEOUT):
@@ -243,9 +247,10 @@ async def async_setup_stats(
     domain: str,
     version: str,
     extra: Callable[[], dict[str, Any]] | None = None,
+    name: str | None = None,
 ) -> StatsReporter:
     """Create, start and return the reporter."""
-    reporter = StatsReporter(hass, entry, domain, version, extra)
+    reporter = StatsReporter(hass, entry, domain, version, extra, name=name)
     await reporter.async_start()
     return reporter
 
