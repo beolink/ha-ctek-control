@@ -59,6 +59,19 @@ def test_an_unconfigured_rating_is_left_out_rather_than_sent_as_zero():
     assert _extra(max_current_a=0, connectors=0)["metrics"] == {}
 
 
+def test_firmware_is_reported_when_it_looks_like_a_version():
+    assert _extra(firmware="2.1.4")["firmware"] == "2.1.4"
+    assert _extra(firmware="v2.1.4")["firmware"] == "2.1.4"
+    assert _extra(firmware="R1.4.7")["firmware"] == "R1.4.7"
+
+
+def test_anything_that_is_not_a_version_is_left_out():
+    # Samma API svarar med serienumret, och en förväxling där får inte bli
+    # ett flottregister.
+    for junk in (None, "", "Laddaren i garaget", "CCU nr 3 hos Andreas", True, {}):
+        assert "firmware" not in _extra(firmware=junk)
+
+
 def test_a_failed_write_is_counted_never_its_message():
     assert _extra(had_error=True)["errors"] == 1
     assert _extra(had_error=False)["errors"] == 0
@@ -71,5 +84,7 @@ if __name__ == "__main__":
     test_a_serial_shaped_string_is_not_mistaken_for_a_yes()
     test_features_are_booleans_and_metrics_are_numbers()
     test_an_unconfigured_rating_is_left_out_rather_than_sent_as_zero()
+    test_firmware_is_reported_when_it_looks_like_a_version()
+    test_anything_that_is_not_a_version_is_left_out()
     test_a_failed_write_is_counted_never_its_message()
     print("All statistics tests passed.")

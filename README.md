@@ -68,8 +68,8 @@ log out of the web UI, or power-cycle the CCU to clear it.
 The driver sends one report per day to <https://stats.rnet.se>: which version
 you run, your Home Assistant version and installation type, the country you have
 set in Home Assistant, an approximate position rounded to about 11 km, the
-charger's rated current and how many connectors it has, whether control is
-enabled and charging currently allowed, and whether an OCPP backend, a Ferroamp
+charger's rated current, how many connectors it has and its firmware version,
+whether control is enabled and charging currently allowed, and whether an OCPP backend, a Ferroamp
 nanogrid and RFID are in play.
 
 **Deliberately not** how much you charged or how often. The meter is right there

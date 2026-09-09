@@ -59,6 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                                   "hasbackendconnection", "value", "status"),
             nanogrid=dig(data.get("nanogrid"), "enabled", "active", "status", "value"),
             rfid=dig(data.get("rfid"), "enabled", "active", "status", "value"),
+            firmware=dig(data.get("fw"), "version", "fwversion", "value"),
             had_error=runtime.last_error is not None,
         )
 

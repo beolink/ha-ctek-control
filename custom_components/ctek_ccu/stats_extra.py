@@ -14,10 +14,28 @@ See https://stats.rnet.se/integritet for the full list and the reasoning.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
-#: The unit this driver speaks to. Fixed, never taken from the device.
+#: The unit this driver speaks to. Fixed, never taken from the device: the
+#: local API does not report a model, and the device name is the user's own.
 MODEL = "ctek_ccu"
+
+#: Firmware versions look like "2.1.4" or "R1.4.7". Anything that does not is
+#: dropped rather than sent: the field sits next to a serial in the same API,
+#: and a mistake there must not become a fleet record.
+_FIRMWARE = re.compile(r"^[0-9A-Za-z][0-9A-Za-z._+-]{0,23}$")
+
+
+def firmware_slug(value) -> str | None:
+    """The charger's own firmware version, or None when it is not a version."""
+    if value is None or isinstance(value, bool):
+        return None
+    text = str(value).strip()
+    # Ett vanligt svar är "v2.1.4"; v:et är brus och tas bort.
+    if text[:1] in ("v", "V") and text[1:2].isdigit():
+        text = text[1:]
+    return text if _FIRMWARE.match(text) else None
 
 
 def _truthy(value: Any) -> bool:
@@ -41,6 +59,7 @@ def build_extra(
     backend_connected: Any = None,
     nanogrid: Any = None,
     rfid: Any = None,
+    firmware: Any = None,
     had_error: bool = False,
 ) -> dict[str, Any]:
     """Assemble the driver's part of the report."""
@@ -50,7 +69,7 @@ def build_extra(
     if connectors:
         metrics["connectors"] = int(connectors)
 
-    return {
+    out: dict[str, Any] = {
         "models": [MODEL],
         "features": {
             # Whether the driver may write, and whether it currently allows
@@ -67,3 +86,7 @@ def build_extra(
         "metrics": metrics,
         "errors": 1 if had_error else 0,
     }
+    version = firmware_slug(firmware)
+    if version:
+        out["firmware"] = version
+    return out

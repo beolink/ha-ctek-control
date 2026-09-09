@@ -14,7 +14,7 @@
           "send_statistics": "Skicka anonym användningsstatistik"
         },
         "data_description": {
-          "send_statistics": "En rapport per dygn till {endpoint}: drivrutinens version, Home Assistant-version och installationstyp, landet du ställt in i Home Assistant, en ungefärlig plats avrundad till cirka 11 km, laddarens märkström och antal uttag, om styrning är påslagen och laddning just nu tillåten, samt om OCPP-backend, Ferroamp nanogrid och RFID är inblandade. Medvetet inte hur mycket du laddat eller hur ofta. Aldrig namn, adress, exakt position, serienummer eller entitetsnamn, och din IP-adress sparas inte. Stänger du av den raderas också det som redan skickats. Hela listan: {privacy_url}"
+          "send_statistics": "En rapport per dygn till {endpoint}: drivrutinens version, Home Assistant-version och installationstyp, landet du ställt in i Home Assistant, en ungefärlig plats avrundad till cirka 11 km, laddarens märkström, antal uttag och programversion, om styrning är påslagen och laddning just nu tillåten, samt om OCPP-backend, Ferroamp nanogrid och RFID är inblandade. Medvetet inte hur mycket du laddat eller hur ofta. Aldrig namn, adress, exakt position, serienummer eller entitetsnamn, och din IP-adress sparas inte. Stänger du av den raderas också det som redan skickats. Hela listan: {privacy_url}"
         }
       }
     },
@@ -41,7 +41,7 @@
           "send_statistics": "Skicka anonym användningsstatistik"
         },
         "data_description": {
-          "send_statistics": "En rapport per dygn till {endpoint}: drivrutinens version, Home Assistant-version och installationstyp, landet du ställt in i Home Assistant, en ungefärlig plats avrundad till cirka 11 km, laddarens märkström och antal uttag, om styrning är påslagen och laddning just nu tillåten, samt om OCPP-backend, Ferroamp nanogrid och RFID är inblandade. Medvetet inte hur mycket du laddat eller hur ofta. Aldrig namn, adress, exakt position, serienummer eller entitetsnamn, och din IP-adress sparas inte. Stänger du av den raderas också det som redan skickats. Hela listan: {privacy_url}"
+          "send_statistics": "En rapport per dygn till {endpoint}: drivrutinens version, Home Assistant-version och installationstyp, landet du ställt in i Home Assistant, en ungefärlig plats avrundad till cirka 11 km, laddarens märkström, antal uttag och programversion, om styrning är påslagen och laddning just nu tillåten, samt om OCPP-backend, Ferroamp nanogrid och RFID är inblandade. Medvetet inte hur mycket du laddat eller hur ofta. Aldrig namn, adress, exakt position, serienummer eller entitetsnamn, och din IP-adress sparas inte. Stänger du av den raderas också det som redan skickats. Hela listan: {privacy_url}"
         }
       }
     },
