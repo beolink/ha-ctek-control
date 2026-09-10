@@ -14,7 +14,7 @@
           "send_statistics": "Anonyme Nutzungsstatistik senden"
         },
         "data_description": {
-          "send_statistics": "Ein Bericht pro Tag an {endpoint}: Treiberversion, Home-Assistant-Version und Installationsart, das eingestellte Land, eine ungefähre Position auf etwa 11 km gerundet, Nennstrom, Anzahl der Ladepunkte und Firmware-Version, ob die Steuerung aktiv und das Laden gerade erlaubt ist, sowie ob OCPP-Backend, Ferroamp-Nanogrid und RFID im Spiel sind. Bewusst nicht, wie viel oder wie oft geladen wurde. Nie Name, Adresse, genaue Position, Seriennummer oder Entitätsname, und die IP-Adresse wird nicht gespeichert. Beim Ausschalten wird auch das bereits Gesendete gelöscht. Die vollständige Liste: {privacy_url}"
+          "send_statistics": "Ein Bericht pro Tag an {endpoint}: Treiberversion, Home-Assistant-Version und Installationsart, das eingestellte Land, eine ungefähre Position auf etwa 11 km gerundet, Nennstrom, Anzahl der Ladepunkte und Firmware-Version, ob die Steuerung aktiv und das Laden gerade erlaubt ist, sowie ob OCPP-Backend, Ferroamp-Nanogrid und RFID im Spiel sind. Bewusst nicht, wie viel oder wie oft geladen wurde. Nie Name, Adresse, genaue Position, Seriennummer oder Entitätsname, und die IP-Adresse wird nicht gespeichert. Beim Ausschalten wird auch das bereits Gesendete gelöscht. Die vollständige Liste: {privacy_url} Außerdem wird ein Hash gesendet, der die beolink-Plugins derselben Home-Assistant-Installation verknüpft, sowie die Anzahl der seit dem letzten Bericht protokollierten Warnungen und Fehler, nie die Meldungen selbst."
         }
       }
     },
@@ -41,7 +41,7 @@
           "send_statistics": "Anonyme Nutzungsstatistik senden"
         },
         "data_description": {
-          "send_statistics": "Ein Bericht pro Tag an {endpoint}: Treiberversion, Home-Assistant-Version und Installationsart, das eingestellte Land, eine ungefähre Position auf etwa 11 km gerundet, Nennstrom, Anzahl der Ladepunkte und Firmware-Version, ob die Steuerung aktiv und das Laden gerade erlaubt ist, sowie ob OCPP-Backend, Ferroamp-Nanogrid und RFID im Spiel sind. Bewusst nicht, wie viel oder wie oft geladen wurde. Nie Name, Adresse, genaue Position, Seriennummer oder Entitätsname, und die IP-Adresse wird nicht gespeichert. Beim Ausschalten wird auch das bereits Gesendete gelöscht. Die vollständige Liste: {privacy_url}"
+          "send_statistics": "Ein Bericht pro Tag an {endpoint}: Treiberversion, Home-Assistant-Version und Installationsart, das eingestellte Land, eine ungefähre Position auf etwa 11 km gerundet, Nennstrom, Anzahl der Ladepunkte und Firmware-Version, ob die Steuerung aktiv und das Laden gerade erlaubt ist, sowie ob OCPP-Backend, Ferroamp-Nanogrid und RFID im Spiel sind. Bewusst nicht, wie viel oder wie oft geladen wurde. Nie Name, Adresse, genaue Position, Seriennummer oder Entitätsname, und die IP-Adresse wird nicht gespeichert. Beim Ausschalten wird auch das bereits Gesendete gelöscht. Die vollständige Liste: {privacy_url} Außerdem wird ein Hash gesendet, der die beolink-Plugins derselben Home-Assistant-Installation verknüpft, sowie die Anzahl der seit dem letzten Bericht protokollierten Warnungen und Fehler, nie die Meldungen selbst."
         }
       }
     },
