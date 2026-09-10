@@ -89,4 +89,4 @@ Run `python3 tests/test_stats.py` to check the payload rules yourself.
 
 ## License
 
-MIT
+Apache License 2.0, see [LICENSE](LICENSE).

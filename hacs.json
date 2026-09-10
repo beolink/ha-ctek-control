@@ -1,3 +1,5 @@
 {
-  "name": "CTEK CCU Control"
+  "name": "CTEK CCU Control",
+  "render_readme": true,
+  "homeassistant": "2024.1.0"
 }
