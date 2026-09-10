@@ -87,6 +87,15 @@ usage statistics.* Switching it off also erases what has already been sent. The
 full list of fields and the reasoning: <https://stats.rnet.se/integritet>.
 Run `python3 tests/test_stats.py` to check the payload rules yourself.
 
+## Roadmap
+
+- **Sync the shared `stats.py` from ha-ctc** at the next build. `EXTRA_KEYS`
+  there now also lets the per-board `firmwares` object through; the backend
+  has accepted it since schema 2, but every copy dropped it. This integration
+  sends no `firmwares`, so nothing is lost today, but the file is meant to stay
+  byte-identical across the integrations. Add a test that reads `EXTRA_KEYS`
+  from stats.py, so a dropped key fails locally.
+
 ## License
 
 Apache License 2.0, see [LICENSE](LICENSE).
